@@ -32,7 +32,6 @@ func main() {
 /*
 Wishlist before releasing:
 
-- Tests
 - Linting
 - Code of conduct
 - Contributing guideline
