@@ -33,10 +33,6 @@ func main() {
 /*
 Wishlist before releasing:
 
-- Linting
-- Code of conduct
-- Contributing guideline
-- Issue templates
 - README badges
 	- Build status
 	- License
