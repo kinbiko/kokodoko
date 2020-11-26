@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/atotto/clipboard"
 	"github.com/kinbiko/bugsnag"
 )
 
@@ -57,25 +56,24 @@ func New(sys System, o11y O11y, cfg Config) *Kokodoko {
 // Validate that the deepest directory of this path is a git repository
 // Validate that this git repository has a GitHub remote
 // Find the current HEAD of this repository
-// Generate link
-// Put link in clipboard
-func (k *Kokodoko) Run(ctx context.Context, args []string) error {
+// Generate and return link
+func (k *Kokodoko) Run(ctx context.Context, args []string) (string, error) {
 	ctx = k.o11y.WithMetadatum(ctx, "app", "arguments", args)
 	candidatePath, candidateLines, err := k.readArg(ctx, args)
 	ctx = k.o11y.WithMetadatum(ctx, "candidate", "candidate path", candidatePath)
 	ctx = k.o11y.WithMetadatum(ctx, "candidate", "candidate lines", candidateLines)
 	if err != nil {
-		return k.o11y.Wrap(ctx, err, "argument error")
+		return "", k.o11y.Wrap(ctx, err, "argument error")
 	}
 
 	info, err := os.Stat(candidatePath)
 	if os.IsNotExist(err) {
-		return k.o11y.Wrap(ctx, nil, "no such file or directory '%s'", candidatePath)
+		return "", k.o11y.Wrap(ctx, nil, "no such file or directory '%s'", candidatePath)
 	}
 	isDir := info.IsDir()
 	ctx = k.o11y.WithMetadatum(ctx, "candidate", "is directory", isDir)
 	if isDir && candidateLines != "" {
-		return k.o11y.Wrap(ctx, nil, "'%s' is a directory, so line numbers don't make sense", candidatePath)
+		return "", k.o11y.Wrap(ctx, nil, "'%s' is a directory, so line numbers don't make sense", candidatePath)
 	}
 	// repoPath doesn't necessarily point to the root of the repository -- just
 	// **some** directory in the repo.
@@ -87,19 +85,19 @@ func (k *Kokodoko) Run(ctx context.Context, args []string) error {
 
 	remoteURL, err := k.sys.RemoteURL(ctx, repoPath)
 	if err != nil {
-		return k.o11y.Wrap(ctx, err, "unable to get remote URL")
+		return "", k.o11y.Wrap(ctx, err, "unable to get remote URL")
 	}
 	ctx = k.o11y.WithMetadatum(ctx, "candidate", "remote URL", remoteURL)
 
 	hash, err := k.sys.Hash(ctx, repoPath)
 	if err != nil {
-		return k.o11y.Wrap(ctx, err, "unable to get commit hash")
+		return "", k.o11y.Wrap(ctx, err, "unable to get commit hash")
 	}
 	ctx = k.o11y.WithMetadatum(ctx, "candidate", "commit hash", hash)
 
 	repoRoot, err := k.sys.RepoRoot(ctx, repoPath)
 	if err != nil {
-		return k.o11y.Wrap(ctx, err, "unable to get repository root directory")
+		return "", k.o11y.Wrap(ctx, err, "unable to get repository root directory")
 	}
 	ctx = k.o11y.WithMetadatum(ctx, "candidate", "repo root", repoRoot)
 
@@ -112,7 +110,7 @@ func (k *Kokodoko) Run(ctx context.Context, args []string) error {
 
 	absolutePath, err := filepath.Abs(candidatePath)
 	if err != nil {
-		return k.o11y.Wrap(ctx, err, "unable to get absolute filepath to '%s'", candidatePath)
+		return "", k.o11y.Wrap(ctx, err, "unable to get absolute filepath to '%s'", candidatePath)
 	}
 	ctx = k.o11y.WithMetadatum(ctx, "candidate", "absolute path", absolutePath)
 
@@ -123,12 +121,7 @@ func (k *Kokodoko) Run(ctx context.Context, args []string) error {
 	url := fmt.Sprintf("%s/blob/%s%s%s", remoteURL, hash, filePathRelativeToGitRoot, lines)
 	ctx = k.o11y.WithMetadatum(ctx, "candidate", "url", url)
 
-	if err = clipboard.WriteAll(url); err != nil {
-		return k.o11y.Wrap(ctx, err, "unable to copy url '%s' to clipboard: %w", url)
-	}
-
-	fmt.Printf("Copied '%s' to the clipboard!\n", url)
-	return nil
+	return url, nil
 }
 
 func (k *Kokodoko) readArg(ctx context.Context, args []string) (string, string, error) {

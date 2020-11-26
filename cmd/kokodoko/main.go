@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/atotto/clipboard"
 	"github.com/kinbiko/bugsnag"
 	"github.com/kinbiko/kokodoko"
 )
@@ -98,11 +99,17 @@ func run(ctx context.Context, args []string) error {
 	defer close()
 	g := &git{O11y: o11y}
 	app := kokodoko.New(g, o11y, kokodoko.Config{})
-	err := app.Run(ctx, args)
+	url, err := app.Run(ctx, args)
 	if n, ok := o11y.(*bugsnag.Notifier); err != nil && ok {
 		n.Notify(ctx, err)
+		return err
 	}
-	return err
+	err = clipboard.WriteAll(url)
+	if n, ok := o11y.(*bugsnag.Notifier); err != nil && ok {
+		n.Notify(ctx, o11y.Wrap(ctx, err, "unable to copy url '%s' to clipboard: %w", url))
+	}
+	fmt.Printf("Copied '%s' to the clipboard!\n", url)
+	return nil
 }
 
 type noopO11y struct{}
