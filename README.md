@@ -7,7 +7,7 @@ Quickly generate GitHub permalink to lines of code in your local filesystem.
 Assuming you have Go installed:
 
 ```
-go get -u github.com/kinbiko/kokodoko
+go get -u github.com/kinbiko/kokodoko/cmd/kokodoko
 ```
 
 ## Usage
