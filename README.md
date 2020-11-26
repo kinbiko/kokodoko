@@ -1,5 +1,11 @@
 # ここどこ？　(koko doko?)
 
+[![Build Status](https://github.com/kinbiko/kokodoko/workflows/Go/badge.svg)](https://github.com/kinbiko/kokodoko/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/kinbiko/kokodoko)](https://goreportcard.com/report/github.com/kinbiko/kokodoko)
+[![Latest version](https://img.shields.io/github/tag/kinbiko/kokodoko.svg?label=latest%20version&style=flat)](https://github.com/kinbiko/kokodoko/releases)
+[![Go Documentation](http://img.shields.io/badge/godoc-documentation-blue.svg?style=flat)](https://pkg.go.dev/github.com/kinbiko/kokodoko?tab=doc)
+[![License](https://img.shields.io/github/license/kinbiko/kokodoko.svg?style=flat)](https://github.com/kinbiko/kokodoko/blob/master/.github/LICENSE)
+
 Quickly generate GitHub permalink to lines of code in your local filesystem.
 
 ## Installation
@@ -27,7 +33,7 @@ However, this tool is more useful when integrated directly in your editor.
 Put the following in your `.vimrc`:
 
 ```vim
-" Super hacky plugin to shell out to github.com/kinbiko/kokodoko and fetch the
+" Super hacky mapping to shell out to github.com/kinbiko/kokodoko and fetch the
 " Github link to the current line(s)
 nnoremap <silent> oiuy :!kokodoko % <C-R>=line(".")<CR><CR>
 vnoremap <silent> oiuy :!kokodoko % <C-R>=line("'<")<CR>-<C-R>=line("'>")<CR><CR>u

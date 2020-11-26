@@ -30,16 +30,6 @@ func main() {
 	}
 }
 
-/*
-Wishlist before releasing:
-
-- README badges
-	- Build status
-	- License
-	- Go report card
-	- Docs
-*/
-
 type git struct {
 	kokodoko.O11y
 }
