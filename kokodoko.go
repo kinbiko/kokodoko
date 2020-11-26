@@ -60,65 +60,83 @@ func New(sys System, o11y O11y, cfg Config) *Kokodoko {
 // Generate link
 // Put link in clipboard
 func (k *Kokodoko) Run(ctx context.Context, args []string) error {
-	pathCandidate, lines, err := readArg(args)
+	ctx = k.o11y.WithMetadatum(ctx, "app", "arguments", args)
+	candidatePath, candidateLines, err := k.readArg(ctx, args)
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "candidate path", candidatePath)
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "candidate lines", candidateLines)
 	if err != nil {
-		return fmt.Errorf("argument error: %w", err)
+		return k.o11y.Wrap(ctx, err, "argument error")
 	}
 
-	info, err := os.Stat(pathCandidate)
+	info, err := os.Stat(candidatePath)
 	if os.IsNotExist(err) {
-		return fmt.Errorf("no such file or directory '%s'", pathCandidate)
+		return k.o11y.Wrap(ctx, nil, "no such file or directory '%s'", candidatePath)
 	}
-	if info.IsDir() && lines != "" {
-		return fmt.Errorf("'%s' is a directory, so line numbers don't make sense", pathCandidate)
+	isDir := info.IsDir()
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "is directory", isDir)
+	if isDir && candidateLines != "" {
+		return k.o11y.Wrap(ctx, nil, "'%s' is a directory, so line numbers don't make sense", candidatePath)
 	}
 	// repoPath doesn't necessarily point to the root of the repository -- just
 	// **some** directory in the repo.
-	repoPath := pathCandidate
-	if !info.IsDir() {
+	repoPath := candidatePath
+	if !isDir {
 		repoPath = repoPath[:len(repoPath)-len(info.Name())]
 	}
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "repo path", repoPath)
 
 	remoteURL, err := k.sys.RemoteURL(ctx, repoPath)
 	if err != nil {
-		return fmt.Errorf("unable to get remote URL: %w", err)
+		return k.o11y.Wrap(ctx, err, "unable to get remote URL")
 	}
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "remote URL", remoteURL)
+
 	hash, err := k.sys.Hash(ctx, repoPath)
 	if err != nil {
-		return fmt.Errorf("unable to get vcs hash: %w", err)
+		return k.o11y.Wrap(ctx, err, "unable to get commit hash")
 	}
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "commit hash", hash)
+
 	repoRoot, err := k.sys.RepoRoot(ctx, repoPath)
 	if err != nil {
-		return fmt.Errorf("unable to get repository root directory: %w", err)
+		return k.o11y.Wrap(ctx, err, "unable to get repository root directory")
 	}
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "repo root", repoRoot)
 
-	if lines != "" {
+	lines := candidateLines
+	if candidateLines != "" {
 		// Turn "1-51" into "#L1-L52" like it is in GitHub URLs.
 		lines = strings.ReplaceAll("#L"+lines, "-", "-L")
 	}
-	absolutePath, err := filepath.Abs(pathCandidate)
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "lines", lines)
+
+	absolutePath, err := filepath.Abs(candidatePath)
 	if err != nil {
-		return fmt.Errorf("unable to get absolute filepath to '%s': %w", pathCandidate, err)
+		return k.o11y.Wrap(ctx, err, "unable to get absolute filepath to '%s'", candidatePath)
 	}
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "absolute path", absolutePath)
+
 	filePathRelativeToGitRoot := absolutePath[strings.Index(absolutePath, repoRoot)+len(repoRoot):]
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "file path relative to git root", filePathRelativeToGitRoot)
 	// desired URL for reference:
 	// https://github.com/kinbiko/dotfiles/blob/15fc22c0c5672e0f15f2ef7ea333bd620aa9965c/vimrc#L35-L52
 	url := fmt.Sprintf("%s/blob/%s%s%s", remoteURL, hash, filePathRelativeToGitRoot, lines)
+	ctx = k.o11y.WithMetadatum(ctx, "candidate", "url", url)
 
 	if err = clipboard.WriteAll(url); err != nil {
-		return fmt.Errorf("unable to copy url '%s' to clipboard: %w", url, err)
+		return k.o11y.Wrap(ctx, err, "unable to copy url '%s' to clipboard: %w", url)
 	}
 
 	fmt.Printf("Copied '%s' to the clipboard!\n", url)
 	return nil
 }
 
-func readArg(args []string) (string, string, error) {
+func (k *Kokodoko) readArg(ctx context.Context, args []string) (string, string, error) {
 	if len(args) == 0 {
-		return "", "", fmt.Errorf(`no path given, did you mean "."?`)
+		return "", "", k.o11y.Wrap(ctx, nil, `no path given, did you mean "."?`)
 	}
 	if len(args) > 2 {
-		return "", "", fmt.Errorf("only one or arguments expected")
+		return "", "", k.o11y.Wrap(ctx, nil, `at most two arguments expected`)
 	}
 
 	if len(args) == 1 {

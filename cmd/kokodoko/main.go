@@ -11,9 +11,13 @@ import (
 	"github.com/kinbiko/kokodoko"
 )
 
+// Globals are used to enable Bugsnag.
+// Must be updated per release.
+const appVersion = "0.1.0"
+
+// The following are intended to be set via ldflags, for developers.
 var (
-	APIKey       = os.Getenv("KOKODOKO_BUGSNAG_API_KEY")
-	AppVersion   = "INJECT ME"
+	APIKey       = "INJECT_ME"
 	ReleaseStage = "development"
 )
 
@@ -27,10 +31,8 @@ func main() {
 /*
 Wishlist before releasing:
 
-- Wrap all errors in bugsnag.Wrap
 - Tests
 - Linting
-- Bugsnag Integration
 - Code of conduct
 - Contributing guideline
 - Issue templates
@@ -50,15 +52,12 @@ type git struct {
 func (g *git) RemoteURL(ctx context.Context, repoPath string) (string, error) {
 	cmd := fmt.Sprintf("git -C %s config --get remote.origin.url", repoPath)
 	ctx = g.WithMetadatum(ctx, "system calls", "Remote URL", cmd)
-	s := strings.Split(cmd, " ")
-	stdout, err := exec.Command(s[0], s[1:]...).Output()
+	output, err := g.call(ctx, cmd)
 	if err != nil {
-		return "", fmt.Errorf("unable to execute git command '%s': %w", cmd, err)
+		return "", err
 	}
-
-	url := string(stdout)
-	url = strings.ReplaceAll(url, "git@github.com:", "https://github.com/")
-	return strings.ReplaceAll(url, ".git\n", ""), nil
+	output = strings.ReplaceAll(output, "git@github.com:", "https://github.com/")
+	return strings.ReplaceAll(output, ".git\n", ""), nil
 }
 
 // Hash returns the current commit HEAD of the inner-most repository that
@@ -66,25 +65,32 @@ func (g *git) RemoteURL(ctx context.Context, repoPath string) (string, error) {
 func (g *git) Hash(ctx context.Context, repoPath string) (string, error) {
 	cmd := fmt.Sprintf("git -C %s rev-parse HEAD", repoPath)
 	ctx = g.WithMetadatum(ctx, "system calls", "Hash", cmd)
-	s := strings.Split(cmd, " ")
-	stdout, err := exec.Command(s[0], s[1:]...).Output()
+	output, err := g.call(ctx, cmd)
 	if err != nil {
-		return "", fmt.Errorf("unable to execute git command '%s': %w", cmd, err)
+		return "", err
 	}
-	return strings.ReplaceAll(string(stdout), "\n", ""), nil
+	return strings.ReplaceAll(string(output), "\n", ""), nil
 }
 
 // RepoRoot returns the root of the repository the inner-most repository that
 // contains the directory of the given path.
 func (g *git) RepoRoot(ctx context.Context, repoPath string) (string, error) {
 	cmd := fmt.Sprintf("git -C %s rev-parse --show-toplevel", repoPath)
-	ctx = g.WithMetadatum(ctx, "system calls", "Hash", cmd)
+	ctx = g.WithMetadatum(ctx, "system calls", "RepoRoot", cmd)
+	output, err := g.call(ctx, cmd)
+	if err != nil {
+		return "", err
+	}
+	return strings.ReplaceAll(output, "\n", ""), nil
+}
+
+func (g *git) call(ctx context.Context, cmd string) (string, error) {
 	s := strings.Split(cmd, " ")
 	stdout, err := exec.Command(s[0], s[1:]...).Output()
 	if err != nil {
-		return "", fmt.Errorf("unable to execute git command '%s': %w", cmd, err)
+		return "", g.Wrap(ctx, err, "unable to execute git command '%s'", cmd)
 	}
-	return strings.ReplaceAll(string(stdout), "\n", ""), nil
+	return string(stdout), nil
 }
 
 func run(ctx context.Context, args []string) error {
@@ -92,7 +98,11 @@ func run(ctx context.Context, args []string) error {
 	defer close()
 	g := &git{O11y: o11y}
 	app := kokodoko.New(g, o11y, kokodoko.Config{})
-	return app.Run(ctx, args)
+	err := app.Run(ctx, args)
+	if n, ok := o11y.(*bugsnag.Notifier); err != nil && ok {
+		n.Notify(ctx, err)
+	}
+	return err
 }
 
 type noopO11y struct{}
@@ -108,7 +118,7 @@ func (n *noopO11y) WithMetadatum(ctx context.Context, tab, key string, val inter
 func makeO11y() (kokodoko.O11y, func()) {
 	n, err := bugsnag.New(bugsnag.Configuration{
 		APIKey:       APIKey,
-		AppVersion:   AppVersion,
+		AppVersion:   appVersion,
 		ReleaseStage: ReleaseStage,
 	})
 	// Intentionally ignoring the error here -- the use of the Bugsnag
