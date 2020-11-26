@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/kinbiko/kokodoko)](https://goreportcard.com/report/github.com/kinbiko/kokodoko)
 [![Latest version](https://img.shields.io/github/tag/kinbiko/kokodoko.svg?label=latest%20version&style=flat)](https://github.com/kinbiko/kokodoko/releases)
 [![Go Documentation](http://img.shields.io/badge/godoc-documentation-blue.svg?style=flat)](https://pkg.go.dev/github.com/kinbiko/kokodoko?tab=doc)
-[![License](https://img.shields.io/github/license/kinbiko/kokodoko.svg?style=flat)](https://github.com/kinbiko/kokodoko/blob/master/.github/LICENSE)
+[![License](https://img.shields.io/github/license/kinbiko/kokodoko.svg?style=flat)](https://github.com/kinbiko/kokodoko/blob/master/LICENSE)
 
 Quickly generate GitHub permalink to lines of code in your local filesystem.
 
