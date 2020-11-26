@@ -1,3 +1,4 @@
+// Package kokodoko exposes an API for fetching GitHub permalinks given a path to a local file.
 package kokodoko
 
 import (
@@ -10,10 +11,37 @@ import (
 	"github.com/kinbiko/bugsnag"
 )
 
+/*
+|| kokodoko.go:151:2: ineffectual assignment to `ctx` (ineffassign)
+|| kokodoko.go:156:1: unnamedResult: consider giving a name to these results (gocritic)
+|| kokodoko.go:160:17: mnd: Magic number: 2, in <condition> detected (gomnd)
+|| kokodoko.go:167:2: return with no blank line before (nlreturn)
+|| kokodoko.go:45: kokodoko.go:45: Line contains TODO/FIXME: "TODO(https://github.com/kinbiko/bugsnag/..." (godox)
+|| kokodoko.go:89: Function 'Run' has too many statements (42 > 20) (funlen)
+|| kokodoko_test.go:156:2: return with no blank line before (nlreturn)
+|| kokodoko_test.go:157: File is not `gofumpt`-ed (gofumpt)
+|| kokodoko_test.go:162:2: return with no blank line before (nlreturn)
+|| kokodoko_test.go:163: File is not `gofumpt`-ed (gofumpt)
+|| kokodoko_test.go:168:2: return with no blank line before (nlreturn)
+|| kokodoko_test.go:17:22: EndpointNotify, EndpointSessions, InternalErrorCallback are missing in Configuration (exhaustivestruct)
+|| kokodoko_test.go:27:74: string `https://github.com/kinbiko/kokodoko` has 3 occurrences, make it a constant (goconst)
+|| kokodoko_test.go:28:74: string `565983f8815aa3919bfc219dca7b692d0509911f` has 3 occurrences, make it a constant (goconst)
+|| kokodoko_test.go:29:74: string `` has 3 occurrences, make it a constant (goconst)
+|| kokodoko_test.go:8: File is not `goimports`-ed with -local github.com/kinbiko/bugsnag (goimports)
+|| kokodoko.go:53:15: struct of size 40 bytes could be of size 32 bytes:
+|| ```
+|| struct{
+|| 	cfg 	github.com/kinbiko/kokodoko.Config,
+|| 	sys 	github.com/kinbiko/kokodoko.System,
+|| 	o11y	github.com/kinbiko/kokodoko.O11y,
+|| }
+|| ``` (maligned)
+*/
+
 // O11y exposes observability methods for monitoring this application.
 type O11y interface {
 	// TODO(https://github.com/kinbiko/bugsnag/issues/31): The bugsnag
-	// dependency here is unfortunate:
+	// dependency here is unfortunate.
 	Wrap(ctx context.Context, err error, msgAndFmtArgs ...interface{}) *bugsnag.Error
 
 	WithMetadatum(ctx context.Context, tab, key string, value interface{}) context.Context
@@ -21,9 +49,9 @@ type O11y interface {
 
 // Kokodoko is the core application struct that executes everything.
 type Kokodoko struct {
+	cfg  Config
 	sys  System
 	o11y O11y
-	cfg  Config
 }
 
 // System represents data-fetching methods that require system calls.
@@ -36,7 +64,7 @@ type System interface {
 	RepoRoot(ctx context.Context, repoPath string) (string, error)
 }
 
-// Config holds options that alters the behaviour of the app.
+// Config holds options that alters the behavior of the app.
 // Note: The author reserves the right to add fields to this struct without
 // releasing a new major version. You should be fine as long as you name
 // parameters in this struct.
@@ -51,12 +79,13 @@ func New(sys System, o11y O11y, cfg Config) *Kokodoko {
 	return &Kokodoko{sys: sys, o11y: o11y, cfg: cfg}
 }
 
-// Run reads the given args, & validate that only one argument was given.
-// Validate that the arg is a file, directory, or specifies a line number or line numbers in a file
-// Validate that the deepest directory of this path is a git repository
-// Validate that this git repository has a GitHub remote
-// Find the current HEAD of this repository
-// Generate and return link
+// Run reads the given args, performs some validation, makes some git syscalls,
+// and returns the URL corresponding to the file (and line number(s))
+// identified in the args.
+// First arg is interpreted as a file path, whereas the second optional
+// argument is a line number or a line number range in the form "12-51".
+//nolint:funlen,gocyclo // I rarely disagree with functions being too long, but in this
+// case it *is* actually easier to read since it's all very left-margin aligned.
 func (k *Kokodoko) Run(ctx context.Context, args []string) (string, error) {
 	ctx = k.o11y.WithMetadatum(ctx, "app", "arguments", args)
 	candidatePath, candidateLines, err := k.readArg(ctx, args)
@@ -119,7 +148,7 @@ func (k *Kokodoko) Run(ctx context.Context, args []string) (string, error) {
 	// desired URL for reference:
 	// https://github.com/kinbiko/dotfiles/blob/15fc22c0c5672e0f15f2ef7ea333bd620aa9965c/vimrc#L35-L52
 	url := fmt.Sprintf("%s/blob/%s%s%s", remoteURL, hash, filePathRelativeToGitRoot, lines)
-	ctx = k.o11y.WithMetadatum(ctx, "candidate", "url", url)
+	k.o11y.WithMetadatum(ctx, "candidate", "url", url)
 
 	return url, nil
 }
@@ -128,7 +157,7 @@ func (k *Kokodoko) readArg(ctx context.Context, args []string) (string, string, 
 	if len(args) == 0 {
 		return "", "", k.o11y.Wrap(ctx, nil, `no path given, did you mean "."?`)
 	}
-	if len(args) > 2 {
+	if len(args) > 2 { //nolint:gomnd // Too keen
 		return "", "", k.o11y.Wrap(ctx, nil, `at most two arguments expected`)
 	}
 

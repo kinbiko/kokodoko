@@ -7,8 +7,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/atotto/clipboard"
 	"github.com/kinbiko/bugsnag"
+
+	"github.com/atotto/clipboard"
 	"github.com/kinbiko/kokodoko"
 )
 
@@ -16,7 +17,7 @@ import (
 // Must be updated per release.
 const appVersion = "0.1.0"
 
-// The following are intended to be set via ldflags, for developers.
+//nolint:gochecknoglobals // The following are intended to be set via ldflags, for developers.
 var (
 	APIKey       = "INJECT_ME"
 	ReleaseStage = "development"
@@ -24,7 +25,7 @@ var (
 
 func main() {
 	if err := run(context.Background(), os.Args[1:]); err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
+		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 }
@@ -69,7 +70,7 @@ func (g *git) Hash(ctx context.Context, repoPath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return strings.ReplaceAll(string(output), "\n", ""), nil
+	return strings.ReplaceAll(output, "\n", ""), nil
 }
 
 // RepoRoot returns the root of the repository the inner-most repository that
@@ -86,7 +87,7 @@ func (g *git) RepoRoot(ctx context.Context, repoPath string) (string, error) {
 
 func (g *git) call(ctx context.Context, cmd string) (string, error) {
 	s := strings.Split(cmd, " ")
-	stdout, err := exec.Command(s[0], s[1:]...).Output()
+	stdout, err := exec.Command(s[0], s[1:]...).Output() //nolint:gosec // Hey, it's your system. Hack yourself if you want
 	if err != nil {
 		return "", g.Wrap(ctx, err, "unable to execute git command '%s'", cmd)
 	}
@@ -94,12 +95,13 @@ func (g *git) call(ctx context.Context, cmd string) (string, error) {
 }
 
 func run(ctx context.Context, args []string) error {
-	o11y, close := makeO11y()
-	defer close()
+	o11y, teardown := makeO11y()
+	defer teardown()
 	g := &git{O11y: o11y}
 	app := kokodoko.New(g, o11y, kokodoko.Config{})
 	url, err := app.Run(ctx, args)
 	if n, ok := o11y.(*bugsnag.Notifier); err != nil && ok {
+		err := o11y.Wrap(ctx, err, "error when generating URL")
 		n.Notify(ctx, err)
 		return err
 	}

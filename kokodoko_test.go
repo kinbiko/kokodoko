@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/kinbiko/bugsnag"
+
 	"github.com/kinbiko/kokodoko"
 )
 
