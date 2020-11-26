@@ -11,33 +11,6 @@ import (
 	"github.com/kinbiko/bugsnag"
 )
 
-/*
-|| kokodoko.go:151:2: ineffectual assignment to `ctx` (ineffassign)
-|| kokodoko.go:156:1: unnamedResult: consider giving a name to these results (gocritic)
-|| kokodoko.go:160:17: mnd: Magic number: 2, in <condition> detected (gomnd)
-|| kokodoko.go:167:2: return with no blank line before (nlreturn)
-|| kokodoko.go:45: kokodoko.go:45: Line contains TODO/FIXME: "TODO(https://github.com/kinbiko/bugsnag/..." (godox)
-|| kokodoko.go:89: Function 'Run' has too many statements (42 > 20) (funlen)
-|| kokodoko_test.go:156:2: return with no blank line before (nlreturn)
-|| kokodoko_test.go:157: File is not `gofumpt`-ed (gofumpt)
-|| kokodoko_test.go:162:2: return with no blank line before (nlreturn)
-|| kokodoko_test.go:163: File is not `gofumpt`-ed (gofumpt)
-|| kokodoko_test.go:168:2: return with no blank line before (nlreturn)
-|| kokodoko_test.go:17:22: EndpointNotify, EndpointSessions, InternalErrorCallback are missing in Configuration (exhaustivestruct)
-|| kokodoko_test.go:27:74: string `https://github.com/kinbiko/kokodoko` has 3 occurrences, make it a constant (goconst)
-|| kokodoko_test.go:28:74: string `565983f8815aa3919bfc219dca7b692d0509911f` has 3 occurrences, make it a constant (goconst)
-|| kokodoko_test.go:29:74: string `` has 3 occurrences, make it a constant (goconst)
-|| kokodoko_test.go:8: File is not `goimports`-ed with -local github.com/kinbiko/bugsnag (goimports)
-|| kokodoko.go:53:15: struct of size 40 bytes could be of size 32 bytes:
-|| ```
-|| struct{
-|| 	cfg 	github.com/kinbiko/kokodoko.Config,
-|| 	sys 	github.com/kinbiko/kokodoko.System,
-|| 	o11y	github.com/kinbiko/kokodoko.O11y,
-|| }
-|| ``` (maligned)
-*/
-
 // O11y exposes observability methods for monitoring this application.
 type O11y interface {
 	// TODO(https://github.com/kinbiko/bugsnag/issues/31): The bugsnag
