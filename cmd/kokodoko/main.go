@@ -26,7 +26,7 @@ var (
 
 func main() {
 	if err := run(context.Background(), os.Args[1:]); err != nil {
-		fmt.Fprint(os.Stderr, err.Error())
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
@@ -90,17 +90,25 @@ func (g *git) call(ctx context.Context, cmd string) (string, error) {
 func run(ctx context.Context, args []string) error {
 	o11y, teardown := makeO11y()
 	defer teardown()
-	g := &git{O11y: o11y}
-	app := kokodoko.New(g, o11y, kokodoko.Config{})
-	url, err := app.Run(ctx, args)
-	if n, ok := o11y.(*bugsnag.Notifier); err != nil && ok {
-		n.Notify(ctx, o11y.Wrap(ctx, err, "error when generating URL"))
-		return o11y.Wrap(ctx, err, "error when generating URL")
+
+	snag := func(err error, msg string) error {
+		err = o11y.Wrap(ctx, err, msg)
+		if n, ok := o11y.(*bugsnag.Notifier); ok {
+			n.Notify(ctx, err)
+		}
+		return err //nolint:wrapcheck // It *is* wrapped. Linter is just too dumb to know.
 	}
+
+	url, err := kokodoko.New(&git{O11y: o11y}, o11y, kokodoko.Config{}).Run(ctx, args)
+	if err != nil {
+		return snag(err, "error when generating URL")
+	}
+
 	err = clipboard.WriteAll(url)
-	if n, ok := o11y.(*bugsnag.Notifier); err != nil && ok {
-		n.Notify(ctx, o11y.Wrap(ctx, err, "unable to copy url '%s' to clipboard: %w", url))
+	if err != nil {
+		return snag(err, fmt.Sprintf("unable to copy url '%s' to clipboard", url))
 	}
+
 	fmt.Printf("Copied '%s' to the clipboard!\n", url)
 	return nil
 }
