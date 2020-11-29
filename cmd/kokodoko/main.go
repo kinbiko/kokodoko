@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/kinbiko/bugsnag"
@@ -69,6 +70,12 @@ func (g *git) RepoRoot(ctx context.Context, repoPath string) (string, error) {
 		return "", err
 	}
 	return strings.ReplaceAll(output, "\n", ""), nil
+}
+
+// AbsolutePath isn't really executing a Git thing, but returns the absolute
+// path to the given relative path.
+func (g *git) AbsolutePath(relative string) (string, error) {
+	return filepath.Abs(relative)
 }
 
 func (g *git) call(ctx context.Context, cmd string) (string, error) {
