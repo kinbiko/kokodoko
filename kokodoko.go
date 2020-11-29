@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/kinbiko/bugsnag"
@@ -35,6 +34,7 @@ type System interface {
 	Hash(ctx context.Context, repoPath string) (string, error)
 	// repoPath doesn't have to be the root of the repository -- any directory in the repo.
 	RepoRoot(ctx context.Context, repoPath string) (string, error)
+	AbsolutePath(relative string) (string, error)
 }
 
 // Config holds options that alters the behavior of the app.
@@ -110,7 +110,7 @@ func (k *Kokodoko) Run(ctx context.Context, args []string) (string, error) {
 	}
 	ctx = k.o11y.WithMetadatum(ctx, "candidate", "lines", lines)
 
-	absolutePath, err := filepath.Abs(candidatePath)
+	absolutePath, err := k.sys.AbsolutePath(candidatePath)
 	if err != nil {
 		return "", k.o11y.Wrap(ctx, err, "unable to get absolute filepath to '%s'", candidatePath)
 	}

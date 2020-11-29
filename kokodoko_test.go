@@ -25,20 +25,33 @@ func TestKokodoko(t *testing.T) {
 	})
 
 	t.Run("success case", func(t *testing.T) {
+		var (
+			dirArg  = "./cmd/kokodoko/"
+			pathArg = "./cmd/kokodoko/main.go"
+		)
 		mockSystem := &SystemMock{
 			RemoteURLFunc: func(context.Context, string) (string, error) { return "https://github.com/kinbiko/kokodoko", nil },
 			HashFunc:      func(context.Context, string) (string, error) { return "565983f8815aa3919bfc219dca7b692d0509911f", nil },
 			RepoRootFunc:  func(context.Context, string) (string, error) { return "/Users/roger/repos/kokodoko", nil },
+			AbsolutePathFunc: func(s string) (string, error) {
+				base := "/Users/roger/repos/kokodoko/cmd/kokodoko"
+				if s == pathArg {
+					return base + "/main.go", nil
+				}
+				return base, nil
+			},
 		}
-		pathArg := "./cmd/kokodoko/main.go"
-		expDirURL := "https://github.com/kinbiko/kokodoko/blob/565983f8815aa3919bfc219dca7b692d0509911f/cmd/kokodoko"
-		expFile := "/main.go"
+
+		var (
+			expDirURL = "https://github.com/kinbiko/kokodoko/blob/565983f8815aa3919bfc219dca7b692d0509911f/cmd/kokodoko"
+			expFile   = "/main.go"
+		)
 		for _, tc := range []struct {
 			name string
 			args []string
 			exp  string
 		}{
-			{"only dir", []string{"./cmd/kokodoko/"}, expDirURL},
+			{"only dir", []string{dirArg}, expDirURL},
 			{"only file", []string{pathArg}, expDirURL + expFile},
 			{"path with one line", []string{pathArg, "12"}, expDirURL + expFile + "#L12"},
 			{"path with line range", []string{pathArg, "12-30"}, expDirURL + expFile + "#L12-L30"},
@@ -155,9 +168,10 @@ func TestKokodoko(t *testing.T) {
 }
 
 type SystemMock struct {
-	RemoteURLFunc func(ctx context.Context, repoPath string) (string, error)
-	HashFunc      func(ctx context.Context, repoPath string) (string, error)
-	RepoRootFunc  func(ctx context.Context, repoPath string) (string, error)
+	RemoteURLFunc    func(ctx context.Context, repoPath string) (string, error)
+	HashFunc         func(ctx context.Context, repoPath string) (string, error)
+	RepoRootFunc     func(ctx context.Context, repoPath string) (string, error)
+	AbsolutePathFunc func(relative string) (string, error)
 }
 
 func (m *SystemMock) RemoteURL(ctx context.Context, repoPath string) (string, error) {
@@ -177,4 +191,10 @@ func (m *SystemMock) RepoRoot(ctx context.Context, repoPath string) (string, err
 		panic("unexpected call to RepoRoot")
 	}
 	return m.RepoRootFunc(ctx, repoPath)
+}
+func (m *SystemMock) AbsolutePath(relative string) (string, error) {
+	if m.AbsolutePathFunc == nil {
+		panic("unexpected call to AbsolutePath")
+	}
+	return m.AbsolutePathFunc(relative)
 }
