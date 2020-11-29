@@ -88,7 +88,7 @@ func (g *git) call(ctx context.Context, cmd string) (string, error) {
 }
 
 func run(ctx context.Context, args []string) error {
-	o11y, teardown := makeO11y()
+	o11y, teardown, ctx := makeO11y(ctx)
 	defer teardown()
 
 	snag := func(err error, msg string) error {
@@ -123,7 +123,7 @@ func (n *noopO11y) WithMetadatum(ctx context.Context, tab, key string, val inter
 	return ctx
 }
 
-func makeO11y() (kokodoko.O11y, func()) {
+func makeO11y(ctx context.Context) (kokodoko.O11y, func(), context.Context) {
 	n, err := bugsnag.New(bugsnag.Configuration{
 		APIKey:       APIKey,
 		AppVersion:   appVersion,
@@ -132,7 +132,9 @@ func makeO11y() (kokodoko.O11y, func()) {
 	// Intentionally ignoring the error here -- the use of the Bugsnag
 	// integration is entirely opt-in.
 	if err != nil {
-		return &noopO11y{}, func() {}
+		return &noopO11y{}, func() {}, ctx
 	}
-	return n, n.Close
+
+	ctx = n.StartSession(ctx)
+	return n, n.Close, ctx
 }
