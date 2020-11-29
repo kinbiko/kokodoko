@@ -16,7 +16,7 @@ import (
 
 // Globals are used to enable Bugsnag.
 // Must be updated per release.
-const appVersion = "0.1.0"
+const appVersion = "0.2.0"
 
 //nolint:gochecknoglobals // The following are intended to be set via ldflags, for developers.
 var (
