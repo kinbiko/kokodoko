@@ -92,11 +92,12 @@ func run(ctx context.Context, args []string) error {
 	defer teardown()
 
 	snag := func(err error, msg string) error {
-		err = o11y.Wrap(ctx, err, msg)
+		berr := bugsnag.Wrap(ctx, err, msg)
+		berr.Unhandled = true
 		if n, ok := o11y.(*bugsnag.Notifier); ok {
-			n.Notify(ctx, err)
+			n.Notify(ctx, berr)
 		}
-		return err //nolint:wrapcheck // It *is* wrapped. Linter is just too dumb to know.
+		return berr //nolint:wrapcheck // It *is* wrapped. Linter is just too dumb to know.
 	}
 
 	url, err := kokodoko.New(&git{O11y: o11y}, o11y, kokodoko.Config{}).Run(ctx, args)
