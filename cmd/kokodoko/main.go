@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/kinbiko/bugsnag"
 
@@ -25,10 +26,13 @@ var (
 )
 
 func main() {
+	code := 0
 	if err := run(context.Background(), os.Args[1:]); err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		code = 1
 	}
+	time.Sleep(time.Second)
+	os.Exit(code)
 }
 
 type git struct {
