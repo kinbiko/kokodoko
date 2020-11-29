@@ -3,7 +3,6 @@ package kokodoko_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/kinbiko/bugsnag"
@@ -64,15 +63,6 @@ func TestKokodoko(t *testing.T) {
 					t.Error(err)
 				}
 				if got != tc.exp {
-					if os.Getenv("CI") == "true" {
-						// Unfortunately due to the weird way that GitHub
-						// checks out its repositories we get false negatives
-						// here.
-						// Skipping inside the test instead of at a higher
-						// level to ensure that the happy path doesn't panic at
-						// the very least.
-						t.Skip()
-					}
 					t.Errorf("expected url:\n%s\nbut got:\n%s", tc.exp, got)
 				}
 			})
