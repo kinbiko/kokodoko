@@ -94,9 +94,8 @@ func run(ctx context.Context, args []string) error {
 	app := kokodoko.New(g, o11y, kokodoko.Config{})
 	url, err := app.Run(ctx, args)
 	if n, ok := o11y.(*bugsnag.Notifier); err != nil && ok {
-		err := o11y.Wrap(ctx, err, "error when generating URL")
-		n.Notify(ctx, err)
-		return err
+		n.Notify(ctx, o11y.Wrap(ctx, err, "error when generating URL"))
+		return o11y.Wrap(ctx, err, "error when generating URL")
 	}
 	err = clipboard.WriteAll(url)
 	if n, ok := o11y.(*bugsnag.Notifier); err != nil && ok {
@@ -108,7 +107,7 @@ func run(ctx context.Context, args []string) error {
 
 type noopO11y struct{}
 
-func (n *noopO11y) Wrap(ctx context.Context, err error, msgAndFmtArgs ...interface{}) *bugsnag.Error {
+func (n *noopO11y) Wrap(ctx context.Context, err error, msgAndFmtArgs ...interface{}) error {
 	// A happy accident of good design :)
 	return bugsnag.Wrap(ctx, err, msgAndFmtArgs...)
 }

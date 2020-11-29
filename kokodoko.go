@@ -6,15 +6,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	"github.com/kinbiko/bugsnag"
 )
 
 // O11y exposes observability methods for monitoring this application.
 type O11y interface {
-	// TODO(https://github.com/kinbiko/bugsnag/issues/31): The bugsnag
-	// dependency here is unfortunate.
-	Wrap(ctx context.Context, err error, msgAndFmtArgs ...interface{}) *bugsnag.Error
+	Wrap(ctx context.Context, err error, msgAndFmtArgs ...interface{}) error
 
 	WithMetadatum(ctx context.Context, tab, key string, value interface{}) context.Context
 }
