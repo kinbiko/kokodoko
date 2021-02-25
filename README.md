@@ -1,6 +1,7 @@
 # ここどこ？　(koko doko?)
 
 [![Build Status](https://github.com/kinbiko/kokodoko/workflows/Go/badge.svg)](https://github.com/kinbiko/kokodoko/actions)
+[![Coverage Status](https://coveralls.io/repos/github/kinbiko/kokodoko/badge.svg?branch=main)](https://coveralls.io/github/kinbiko/kokodoko?branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kinbiko/kokodoko)](https://goreportcard.com/report/github.com/kinbiko/kokodoko)
 [![Latest version](https://img.shields.io/github/tag/kinbiko/kokodoko.svg?label=latest%20version&style=flat)](https://github.com/kinbiko/kokodoko/releases)
 [![Go Documentation](http://img.shields.io/badge/godoc-documentation-blue.svg?style=flat)](https://pkg.go.dev/github.com/kinbiko/kokodoko?tab=doc)
