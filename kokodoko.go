@@ -119,7 +119,8 @@ func (k *Kokodoko) Run(ctx context.Context, args []string) (string, error) {
 	url := fmt.Sprintf("%s/blob/%s%s%s", remoteURL, hash, filePathRelativeToGitRoot, lines)
 	k.o11y.WithMetadatum(ctx, "candidate", "url", url)
 
-	return url, nil
+	// Remove any whitespace that still exist in the string for whatever reason
+	return strings.Join(strings.Fields(url), ""), nil
 }
 
 func (k *Kokodoko) readArg(ctx context.Context, args []string) (string, string, error) {
