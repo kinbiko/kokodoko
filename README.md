@@ -7,7 +7,8 @@
 [![Go Documentation](http://img.shields.io/badge/godoc-documentation-blue.svg?style=flat)](https://pkg.go.dev/github.com/kinbiko/kokodoko?tab=doc)
 [![License](https://img.shields.io/github/license/kinbiko/kokodoko.svg?style=flat)](https://github.com/kinbiko/kokodoko/blob/master/LICENSE)
 
-Quickly generate GitHub permalink to lines of code in your local filesystem.
+Stop wasting time finding the same code location in GitHub via the browser!
+Instead, quickly generate GitHub permalink to lines of code in your local filesystem with `kokodoko` (best if integrated with your editor).
 
 ## Installation
 

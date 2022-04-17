@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,7 +29,7 @@ var (
 func main() {
 	code := 0
 	if err := run(context.Background(), os.Args[1:]); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		code = 1
 	}
 	time.Sleep(time.Second)
@@ -79,7 +80,11 @@ func (g *git) RepoRoot(ctx context.Context, repoPath string) (string, error) {
 // AbsolutePath isn't really executing a Git thing, but returns the absolute
 // path to the given relative path.
 func (g *git) AbsolutePath(relative string) (string, error) {
-	return filepath.Abs(relative)
+	got, err := filepath.Abs(relative)
+	if err != nil {
+		return "", fmt.Errorf("unable to get absolute path: %w", err)
+	}
+	return got, nil
 }
 
 func (g *git) call(ctx context.Context, cmd string) (string, error) {
@@ -101,7 +106,7 @@ func run(ctx context.Context, args []string) error {
 		if n, ok := o11y.(*bugsnag.Notifier); ok {
 			n.Notify(ctx, berr)
 		}
-		return berr //nolint:wrapcheck // It *is* wrapped. Linter is just too dumb to know.
+		return berr
 	}
 
 	url, err := kokodoko.New(&git{O11y: o11y}, o11y, kokodoko.Config{}).Run(ctx, args)
@@ -114,7 +119,7 @@ func run(ctx context.Context, args []string) error {
 		return snag(err, fmt.Sprintf("unable to copy url '%s' to clipboard", url))
 	}
 
-	fmt.Printf("Copied '%s' to the clipboard!\n", url)
+	log.Printf("Copied '%s' to the clipboard!\n", url)
 	return nil
 }
 
@@ -129,7 +134,7 @@ func (n *noopO11y) WithMetadatum(ctx context.Context, tab, key string, val inter
 }
 
 func makeO11y(ctx context.Context) (kokodoko.O11y, func(), context.Context) {
-	n, err := bugsnag.New(bugsnag.Configuration{
+	notifier, err := bugsnag.New(bugsnag.Configuration{
 		APIKey:       APIKey,
 		AppVersion:   appVersion,
 		ReleaseStage: ReleaseStage,
@@ -140,6 +145,6 @@ func makeO11y(ctx context.Context) (kokodoko.O11y, func(), context.Context) {
 		return &noopO11y{}, func() {}, ctx
 	}
 
-	ctx = n.StartSession(ctx)
-	return n, n.Close, ctx
+	ctx = notifier.StartSession(ctx)
+	return notifier, notifier.Close, ctx
 }

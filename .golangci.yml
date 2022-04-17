@@ -232,6 +232,8 @@ linters:
     - nlreturn
     - gofumpt
     - exhaustivestruct
+    - gci # collides with goimports
+    - ireturn # this is such a silly style rule -- somes times it *does* make sense to return an interface
   presets:
     - bugs
     - complexity
@@ -255,6 +257,7 @@ issues:
     # Exclude some linters from running on tests files.
     - path: _test\.go
       linters:
+        - cyclop
         - dupl
         - errcheck
         - funlen
@@ -266,6 +269,7 @@ issues:
         - scopelint
         - stylecheck
         - testpackage
+        - varnamelen
     - path: \.go
       linters:
         - goerr113
