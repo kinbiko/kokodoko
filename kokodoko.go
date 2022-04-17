@@ -53,8 +53,9 @@ func New(sys System, o11y O11y, cfg Config) *Kokodoko {
 // identified in the args.
 // First arg is interpreted as a file path, whereas the second optional
 // argument is a line number or a line number range in the form "12-51".
-//nolint:funlen,gocyclo // I rarely disagree with functions being too long, but in this
-// case it *is* actually easier to read since it's all very left-margin aligned.
+// nolint:funlen,gocyclo,cyclop // I rarely disagree with functions being too
+// long, but in this case it *is* actually easier to read since it's all very
+// left-margin aligned.
 func (k *Kokodoko) Run(ctx context.Context, args []string) (string, error) {
 	ctx = k.o11y.WithMetadatum(ctx, "app", "arguments", args)
 	candidatePath, candidateLines, err := k.readArg(ctx, args)

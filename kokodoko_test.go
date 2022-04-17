@@ -45,7 +45,7 @@ func TestKokodoko(t *testing.T) {
 			expDirURL = "https://github.com/kinbiko/kokodoko/blob/565983f8815aa3919bfc219dca7b692d0509911f/cmd/kokodoko"
 			expFile   = "/main.go"
 		)
-		for _, tc := range []struct {
+		for _, tc := range []struct { // nolint:govet // Don't care about perf. It's just easier to read like this
 			name string
 			args []string
 			exp  string
