@@ -1,6 +1,6 @@
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
-github.com/kinbiko/bugsnag v0.12.0 h1:Hbci8+cxjpTCMpCVCzFZvJz0by4IZv05TceTUi75msE=
-github.com/kinbiko/bugsnag v0.12.0/go.mod h1:dbCx/HY732LZf4LHCRsCM9XdGeAoNpaGV14/reGcYZU=
-github.com/kinbiko/jsonassert v1.0.2 h1:UzNDYv5K8UsSHXS3Opsf0ZNz2NQCHl96OC3dlTytUtE=
-github.com/kinbiko/jsonassert v1.0.2/go.mod h1:QRwBwiAsrcJpjw+L+Q4WS8psLxuUY+HylVZS/4j74TM=
+github.com/kinbiko/bugsnag v0.15.0 h1:B/Zv3DLO8Xy2Ko718HTKDxo7ymhNbJdM+QbsgJg4oTM=
+github.com/kinbiko/bugsnag v0.15.0/go.mod h1:gYHCwYL5gA0nxrGqB5mMcsB7NkKnaZbX2SVq3RMaBUg=
+github.com/kinbiko/jsonassert v1.1.0 h1:AakKgkRFsuzE1FNLYrcxTI7ga5YYcbujOUbSf8l+WmU=
+github.com/kinbiko/jsonassert v1.1.0/go.mod h1:QRwBwiAsrcJpjw+L+Q4WS8psLxuUY+HylVZS/4j74TM=
